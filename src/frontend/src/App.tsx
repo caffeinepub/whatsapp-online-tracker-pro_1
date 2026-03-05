@@ -16,13 +16,16 @@ import { useContacts } from "./hooks/useContacts";
 import { useNotifications } from "./hooks/useNotifications";
 import { useSoundAlert } from "./hooks/useSoundAlert";
 import { useStatusSimulator } from "./hooks/useStatusSimulator";
+import { useStatuses } from "./hooks/useStatuses";
 import { useTheme } from "./hooks/useTheme";
 import { useToastNotifications } from "./hooks/useToastNotifications";
 import { ContactsPage } from "./pages/ContactsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { StatisticsPage } from "./pages/StatisticsPage";
+import { StatusPage } from "./pages/StatusPage";
 import type { ActivityLog } from "./types/activity";
 import type { Contact } from "./types/contact";
+import type { ContactStatuses } from "./types/status";
 
 // ── App-wide context ──────────────────────────────────────────────────────────
 
@@ -33,6 +36,15 @@ interface AppContextValue {
   handleDeleteContact: (id: string) => void;
   updateContactPhoto: (contactId: string, photoUrl: string) => void;
   handleManualToggle: (contactId: string) => void;
+  statuses: ContactStatuses;
+  addStatus: (
+    contactId: string,
+    type: "photo" | "text",
+    content: string,
+    caption?: string,
+  ) => void;
+  markViewed: (statusId: string) => void;
+  deleteStatus: (statusId: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -83,6 +95,20 @@ function StatisticsPageWrapper() {
   return <StatisticsPage contacts={contacts} activityLog={activityLog} />;
 }
 
+function StatusPageWrapper() {
+  const { contacts, statuses, addStatus, markViewed, deleteStatus } =
+    useAppContext();
+  return (
+    <StatusPage
+      contacts={contacts}
+      statuses={statuses}
+      addStatus={addStatus}
+      markViewed={markViewed}
+      deleteStatus={deleteStatus}
+    />
+  );
+}
+
 // ── Root layout (provides context + shared chrome) ────────────────────────────
 
 function RootLayout() {
@@ -97,6 +123,7 @@ function RootLayout() {
     manualToggleStatus,
   } = useContacts();
   const { log: activityLog, addEntry, removeContactLog } = useActivityLog();
+  const { statuses, addStatus, markViewed, deleteStatus } = useStatuses();
   const { notifications, addNotification, markAllRead, clearAll, unreadCount } =
     useNotifications();
   const { toasts, addToast, removeToast } = useToastNotifications();
@@ -185,6 +212,10 @@ function RootLayout() {
     handleDeleteContact,
     updateContactPhoto,
     handleManualToggle,
+    statuses,
+    addStatus,
+    markViewed,
+    deleteStatus,
   };
 
   return (
@@ -251,9 +282,16 @@ const statisticsRoute = createRoute({
   component: StatisticsPageWrapper,
 });
 
+const statusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/status",
+  component: StatusPageWrapper,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   contactsRoute,
+  statusRoute,
   statisticsRoute,
 ]);
 

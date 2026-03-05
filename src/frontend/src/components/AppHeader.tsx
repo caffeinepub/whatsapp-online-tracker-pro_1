@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   BarChart2,
+  ImageIcon,
   LayoutDashboard,
   Menu,
   MessageCircle,
@@ -21,9 +22,25 @@ interface AppHeaderProps {
 }
 
 const NAV_LINKS = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/contacts", label: "Contacts", icon: Users },
-  { to: "/statistics", label: "Statistics", icon: BarChart2 },
+  {
+    to: "/",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    ocid: "nav.dashboard.link",
+  },
+  {
+    to: "/contacts",
+    label: "Contacts",
+    icon: Users,
+    ocid: "nav.contacts.link",
+  },
+  { to: "/status", label: "Status", icon: ImageIcon, ocid: "nav.status.link" },
+  {
+    to: "/statistics",
+    label: "Statistics",
+    icon: BarChart2,
+    ocid: "nav.statistics.link",
+  },
 ];
 
 export function AppHeader({
@@ -51,12 +68,13 @@ export function AppHeader({
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1 ml-4 flex-1">
-            {NAV_LINKS.map(({ to, label, icon: Icon }) => {
+            {NAV_LINKS.map(({ to, label, icon: Icon, ocid }) => {
               const isActive = location.pathname === to;
               return (
                 <Link
                   key={to}
                   to={to}
+                  data-ocid={ocid}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                     isActive
@@ -99,12 +117,13 @@ export function AppHeader({
         {/* Mobile Nav */}
         {mobileOpen && (
           <nav className="md:hidden pb-3 flex flex-col gap-1 animate-fade-in">
-            {NAV_LINKS.map(({ to, label, icon: Icon }) => {
+            {NAV_LINKS.map(({ to, label, icon: Icon, ocid }) => {
               const isActive = location.pathname === to;
               return (
                 <Link
                   key={to}
                   to={to}
+                  data-ocid={ocid}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
