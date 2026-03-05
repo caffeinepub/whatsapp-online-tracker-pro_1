@@ -1,0 +1,22 @@
+{
+  "name": "WhatsApp Online Tracker Pro",
+  "short_name": "WA Tracker",
+  "description": "Track WhatsApp online status of your contacts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#25D366",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/generated/favicon.dim_64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/generated/app-icon.dim_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
