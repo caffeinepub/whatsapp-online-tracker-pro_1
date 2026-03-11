@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { AddContactForm } from "../components/AddContactForm";
 import { ContactList } from "../components/ContactList";
 import { cn } from "../lib/utils";
 import type { ActivityLog } from "../types/activity";
 import type { Contact } from "../types/contact";
+
+const BANNER_KEY = "wa-tracker-banner-dismissed";
 
 interface ContactsPageProps {
   contacts: Contact[];
@@ -25,6 +27,22 @@ export function ContactsPage({
   onManualToggle,
 }: ContactsPageProps) {
   const [showForm, setShowForm] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(BANNER_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    try {
+      localStorage.setItem(BANNER_KEY, "true");
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -40,6 +58,7 @@ export function ContactsPage({
         </div>
         <Button
           onClick={() => setShowForm((v) => !v)}
+          data-ocid="contacts.primary_button"
           className={cn(
             "rounded-xl h-9 text-sm font-semibold transition-all shadow-wa",
             showForm
@@ -60,6 +79,33 @@ export function ContactsPage({
           )}
         </Button>
       </div>
+
+      {/* Info banner — dismissible, persisted in localStorage */}
+      {!bannerDismissed && (
+        <div className="flex items-start gap-3 bg-wa-green/10 border border-wa-green/20 rounded-xl px-4 py-3 animate-fade-in-up">
+          <Info className="w-4 h-4 text-wa-green flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground/80 flex-1 leading-relaxed">
+            This app tracks status{" "}
+            <span className="font-semibold text-foreground">manually</span>.
+            Press{" "}
+            <span className="font-semibold text-wa-green">"Mark Online"</span>{" "}
+            or{" "}
+            <span className="font-semibold text-foreground/70">
+              "Mark Offline"
+            </span>{" "}
+            on each contact card to log their activity and session time.
+          </p>
+          <button
+            type="button"
+            onClick={dismissBanner}
+            data-ocid="info_banner.close_button"
+            className="flex-shrink-0 p-0.5 rounded-md hover:bg-wa-green/15 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Dismiss info banner"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Add form */}
       {showForm && (

@@ -12,10 +12,10 @@ import { AppHeader } from "./components/AppHeader";
 import { ToastContainer } from "./components/ToastContainer";
 import { useActivityLog } from "./hooks/useActivityLog";
 import { useBrowserNotifications } from "./hooks/useBrowserNotifications";
+import { useCallHistory } from "./hooks/useCallHistory";
 import { useContacts } from "./hooks/useContacts";
 import { useNotifications } from "./hooks/useNotifications";
 import { useSoundAlert } from "./hooks/useSoundAlert";
-import { useStatusSimulator } from "./hooks/useStatusSimulator";
 import { useStatuses } from "./hooks/useStatuses";
 import { useTheme } from "./hooks/useTheme";
 import { useToastNotifications } from "./hooks/useToastNotifications";
@@ -118,11 +118,11 @@ function RootLayout() {
     contacts,
     addContact,
     removeContact,
-    updateContacts,
     updateContactPhoto,
     manualToggleStatus,
   } = useContacts();
   const { log: activityLog, addEntry, removeContactLog } = useActivityLog();
+  const { removeContactCallHistory } = useCallHistory();
   const { statuses, addStatus, markViewed, deleteStatus } = useStatuses();
   const { notifications, addNotification, markAllRead, clearAll, unreadCount } =
     useNotifications();
@@ -188,17 +188,13 @@ function RootLayout() {
     [manualToggleStatus, contacts, handleStatusChange],
   );
 
-  useStatusSimulator(contacts, {
-    onStatusChange: handleStatusChange,
-    updateContacts,
-  });
-
   const handleDeleteContact = useCallback(
     (id: string) => {
       removeContact(id);
       removeContactLog(id);
+      removeContactCallHistory(id);
     },
-    [removeContact, removeContactLog],
+    [removeContact, removeContactLog, removeContactCallHistory],
   );
 
   const appId = encodeURIComponent(

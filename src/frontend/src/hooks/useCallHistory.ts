@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { CallHistory, CallRecord } from "../types/callHistory";
 
-const STORAGE_KEY = "wa-tracker-call-history";
+const STORAGE_KEY = "wa-tracker-calls";
 
 function loadHistory(): CallHistory {
   try {
@@ -17,64 +17,66 @@ function saveHistory(history: CallHistory) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
-function generateRandomRecords(contactId: string): CallRecord[] {
-  const now = Date.now();
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-  const records: CallRecord[] = [];
-
-  // Generate 3-5 audio calls
-  const audioCount = 3 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < audioCount; i++) {
-    records.push({
-      id: `call-audio-${now}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-      contactId,
-      type: "audio",
-      timestamp: now - Math.floor(Math.random() * thirtyDays),
-      duration: 30 + Math.floor(Math.random() * 570), // 30s to 600s
-    });
-  }
-
-  // Generate 3-5 video calls
-  const videoCount = 3 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < videoCount; i++) {
-    records.push({
-      id: `call-video-${now}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-      contactId,
-      type: "video",
-      timestamp: now - Math.floor(Math.random() * thirtyDays),
-      duration: 30 + Math.floor(Math.random() * 570),
-    });
-  }
-
-  // Sort by timestamp descending
-  return records.sort((a, b) => b.timestamp - a.timestamp);
-}
-
 export function useCallHistory() {
+  /** Returns persisted call records for a contact (empty array if none). */
   const getCallHistory = useCallback((contactId: string): CallRecord[] => {
     const history = loadHistory();
-    if (!history[contactId]) {
-      // Generate and persist on first access
-      const records = generateRandomRecords(contactId);
-      history[contactId] = records;
+    return history[contactId] ?? [];
+  }, []);
+
+  /**
+   * Manually log a new call record.
+   * Returns the created record.
+   */
+  const addCallRecord = useCallback(
+    (
+      contactId: string,
+      type: "audio" | "video",
+      durationSeconds: number,
+      note?: string,
+    ): CallRecord => {
+      const record: CallRecord = {
+        id: `call-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        contactId,
+        type,
+        timestamp: Date.now(),
+        duration: durationSeconds,
+        note,
+      };
+      const history = loadHistory();
+      const existing = history[contactId] ?? [];
+      history[contactId] = [record, ...existing];
       saveHistory(history);
-      return records;
-    }
-    return history[contactId];
-  }, []);
+      return record;
+    },
+    [],
+  );
 
-  const addCallRecord = useCallback((record: CallRecord) => {
-    const history = loadHistory();
-    const existing = history[record.contactId] ?? [];
-    history[record.contactId] = [record, ...existing];
-    saveHistory(history);
-  }, []);
+  /** Remove a single call record by id. */
+  const removeCallRecord = useCallback(
+    (contactId: string, recordId: string) => {
+      const history = loadHistory();
+      const existing = history[contactId] ?? [];
+      history[contactId] = existing.filter((r) => r.id !== recordId);
+      if (history[contactId].length === 0) {
+        delete history[contactId];
+      }
+      saveHistory(history);
+    },
+    [],
+  );
 
+  /** Remove all call records for a contact (call on contact delete). */
   const removeContactCallHistory = useCallback((contactId: string) => {
     const history = loadHistory();
     delete history[contactId];
     saveHistory(history);
   }, []);
 
-  return { getCallHistory, addCallRecord, removeContactCallHistory };
+  return {
+    getCallHistory,
+    addCallRecord,
+    removeCallRecord,
+    removeContactCallHistory,
+  };
 }

@@ -6,6 +6,7 @@ export interface CallRecord {
   type: CallType;
   timestamp: number; // ms
   duration: number; // seconds
+  note?: string;
 }
 
 export type CallHistory = Record<string, CallRecord[]>;
